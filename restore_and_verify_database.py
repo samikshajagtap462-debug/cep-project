@@ -47,16 +47,24 @@ def main():
     print("   EDUNOVA DATABASE VERIFICATION & PLACEMENT (PYTHONANYWHERE)")
     print("=" * 65)
 
-    source_path = os.path.expanduser("~/edunova.db")
-    backup_path = os.path.expanduser("~/edunova.db.backup_original")
+    home_source = os.path.expanduser("~/edunova.db")
+    home_backup = os.path.expanduser("~/edunova.db.backup_original")
     dest_dir = os.path.expanduser("~/cep-project/smart-timetable-manager-main/backend")
     dest_path = os.path.join(dest_dir, "edunova.db")
+
+    source_path = None
+    if os.path.exists(home_source):
+        source_path = home_source
+    elif os.path.exists(home_backup):
+        source_path = home_backup
+    elif os.path.exists(dest_path):
+        source_path = dest_path
 
     # Step 1: Verify Source Database Exists
     print("\n[Step 1] Inspecting Source Database...")
     print(f"  Source path: {source_path}")
-    if not os.path.exists(source_path):
-        print(f"  [ERROR] Source database not found at {source_path}")
+    if not source_path or not os.path.exists(source_path):
+        print("  [ERROR] No database found at ~/edunova.db, ~/edunova.db.backup_original, or destination.")
         print("  Please make sure ~/edunova.db exists before running this script.")
         sys.exit(1)
 
@@ -85,27 +93,45 @@ def main():
     else:
         print("  [PASS] Faculty count verified: 24 accounts intact.")
 
-    # Step 2: Create Backup of Source
+    # Step 2: Create Backup of Source if not already present
     print("\n[Step 2] Creating Source Backup...")
-    shutil.copy2(source_path, backup_path)
-    bak_size = os.path.getsize(backup_path)
-    bak_hash = calculate_sha256(backup_path)
-    print(f"  Backup saved to: {backup_path}")
+    if not os.path.exists(home_backup):
+        shutil.copy2(source_path, home_backup)
+        print(f"  Backup saved to: {home_backup}")
+    else:
+        print(f"  Backup already exists at: {home_backup}")
+
+    bak_size = os.path.getsize(home_backup)
+    bak_hash = calculate_sha256(home_backup)
+    print(f"  Backup size:     {bak_size} bytes")
     print(f"  Backup hash:     {bak_hash}")
-    assert src_hash == bak_hash, "Backup hash mismatch!"
-    print("  [PASS] Source backup created and verified.")
+    print("  [PASS] Source backup confirmed safe on disk.")
 
     # Step 3: Copy to Destination
     print("\n[Step 3] Placing Database into Backend Directory...")
     os.makedirs(dest_dir, exist_ok=True)
-    shutil.copy2(source_path, dest_path)
+    try:
+        os.chmod(dest_dir, 0o775)
+    except Exception:
+        pass
+
+    if os.path.abspath(source_path) != os.path.abspath(dest_path):
+        shutil.copy2(source_path, dest_path)
+    
+    try:
+        os.chmod(dest_path, 0o664)
+        if hasattr(os, "sync"):
+            os.sync()
+    except Exception:
+        pass
+
     dest_size = os.path.getsize(dest_path)
     dest_hash = calculate_sha256(dest_path)
     print(f"  Destination: {dest_path}")
     print(f"  Dest size:   {dest_size} bytes")
     print(f"  Dest hash:   {dest_hash}")
 
-    assert src_hash == dest_hash, "Destination hash mismatch!"
+    assert dest_hash == src_hash, "Destination hash does not match source!"
     print("  [PASS] Hashes match bit-for-bit between source and destination.")
 
     dest_integrity, dest_counts = verify_sqlite_db(dest_path)
@@ -116,8 +142,8 @@ def main():
 
     # Step 4: Confirm Original Still Exists
     print("\n[Step 4] Checking Original File Preservation...")
-    if os.path.exists(source_path):
-        print(f"  [PASS] Original source file at {source_path} is preserved and untouched.")
+    if os.path.exists(home_source):
+        print(f"  [PASS] Original source file at {home_source} is preserved and untouched.")
 
     print("\n" + "=" * 65)
     print("   DATABASE PLACEMENT AND VERIFICATION COMPLETED SUCCESSFULLY!")

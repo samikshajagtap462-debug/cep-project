@@ -1,7 +1,7 @@
 import os
 import shutil
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def resolve_database_config():
     explicit_path = os.getenv("DATABASE_PATH") or os.getenv("SQLITE_DB_PATH")
 
     if explicit_path:
-        db_path = os.path.abspath(explicit_path)
+        db_path = os.path.abspath(os.path.expanduser(explicit_path))
     elif database_url:
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -41,11 +41,21 @@ def resolve_database_config():
             return database_url, None
         elif database_url.startswith("sqlite:///"):
             raw_path = database_url[len("sqlite:///"):]
-            db_path = os.path.abspath(raw_path)
+            db_path = os.path.abspath(os.path.expanduser(raw_path))
     else:
-        # Check for Render persistent disk mount at /var/data
-        if os.path.isdir("/var/data") and os.access("/var/data", os.W_OK):
-            db_path = "/var/data/edunova.db"
+        # Check standard persistent locations in priority order
+        home_db = os.path.abspath(os.path.expanduser("~/edunova.db"))
+        home_backend_db = os.path.abspath(os.path.expanduser("~/cep-project/smart-timetable-manager-main/backend/edunova.db"))
+        render_disk_db = "/var/data/edunova.db"
+
+        if os.path.exists(home_backend_db):
+            db_path = home_backend_db
+        elif os.path.exists(home_db):
+            db_path = home_db
+        elif os.path.exists(BUNDLED_DB_PATH):
+            db_path = BUNDLED_DB_PATH
+        elif os.path.isdir("/var/data") and os.access("/var/data", os.W_OK):
+            db_path = render_disk_db
         else:
             db_path = BUNDLED_DB_PATH
 
@@ -62,11 +72,18 @@ def resolve_database_config():
         if os.path.exists(db_path):
             logger.info(f"Using existing SQLite database at '{db_path}' ({os.path.getsize(db_path)} bytes).")
         else:
-            # Persistent disk is empty on first deployment; safely initialize once from secret file or bundled template
+            # Check candidate sources to safely initialize target
             secret_source = os.getenv("SECRET_DB_PATH") or "/etc/secrets/edunova.db"
+            home_source = os.path.abspath(os.path.expanduser("~/edunova.db"))
+            home_backup_source = os.path.abspath(os.path.expanduser("~/edunova.db.backup_original"))
+
             init_source = None
             if os.path.exists(secret_source):
                 init_source = secret_source
+            elif os.path.exists(home_source) and os.path.abspath(db_path) != home_source:
+                init_source = home_source
+            elif os.path.exists(home_backup_source) and os.path.abspath(db_path) != home_backup_source:
+                init_source = home_backup_source
             elif os.path.exists(BUNDLED_DB_PATH) and os.path.abspath(db_path) != os.path.abspath(BUNDLED_DB_PATH):
                 init_source = BUNDLED_DB_PATH
 
@@ -78,8 +95,8 @@ def resolve_database_config():
                         f"from source '{init_source}' ({os.path.getsize(db_path)} bytes)."
                     )
                 except Exception as e:
-                    logger.error(f"Failed to copy database from '{init_source}' to '{db_path}': {e}. Falling back to bundled DB.")
-                    db_path = BUNDLED_DB_PATH
+                    logger.error(f"Failed to copy database from '{init_source}' to '{db_path}': {e}. Falling back to source DB.")
+                    db_path = init_source
 
         norm_path = os.path.abspath(db_path).replace("\\", "/")
         database_url = f"sqlite:///{norm_path}"
@@ -91,12 +108,21 @@ DATABASE_URL, DB_PATH = resolve_database_config()
 if not DB_PATH:
     DB_PATH = BUNDLED_DB_PATH
 
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+connect_args = {"check_same_thread": False, "timeout": 30} if "sqlite" in DATABASE_URL else {}
 
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args
 )
+
+if "sqlite" in DATABASE_URL:
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA busy_timeout=30000")
+        finally:
+            cursor.close()
 
 SessionLocal = sessionmaker(
     bind=engine,
