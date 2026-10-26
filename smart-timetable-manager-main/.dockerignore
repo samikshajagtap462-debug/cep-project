@@ -1,0 +1,30 @@
+# Version control & IDE files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Python caches & build artifacts
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache
+.coverage
+htmlcov
+
+# Documentation & media
+*.md
+timetable_screenshots
+scratch
+
+# Local environment variables & secrets (never build into image)
+.env
+.env.*
+!.env.example
+
+# Backup files
+*.backup*
+*.backup_*

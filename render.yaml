@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: edunova-timetable
+    env: python
+    region: oregon
+    plan: starter  # Note: Persistent disks require Render Starter plan or above
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    disk:
+      name: edunova-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: DATABASE_PATH
+        value: /var/data/edunova.db
+      - key: EDUNOVA_SECRET_KEY
+        generateValue: true

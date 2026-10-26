@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduNova - Smart Faculty Timetable & Syllabus Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f2fbf7',
+              100: '#e1f7ec',
+              200: '#c3eed9',
+              300: '#94e0bc',
+              400: '#5fc99b',
+              500: '#38b07e',
+              600: '#2c9367',
+              700: '#257453',
+              800: '#215c44',
+              900: '#1d4d3a',
+            },
+            mint: {
+              50: '#f2fbf7',
+              100: '#e1f7ec',
+              200: '#c3eed9',
+              300: '#94e0bc',
+              400: '#5fc99b',
+              500: '#38b07e',
+              600: '#2c9367',
+              700: '#257453',
+              800: '#215c44',
+              900: '#1d4d3a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- LOGIN / AUTH SCREEN -->
+  <div id="auth-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-[#f2fbf7] via-[#ebf8f1] to-[#e1f5ec] flex items-center justify-center p-4 sm:p-6">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl shadow-emerald-950/5 p-6 sm:p-8 border border-[#d2edd9] relative">
+      
+      <!-- Brand & Header -->
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 bg-[#38b07e] text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-md shadow-[#38b07e]/25 mb-3">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">EduNova Portal</h1>
+        <p class="text-slate-500 text-xs mt-1 font-medium">Smart Faculty Timetable Management System</p>
+        <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#e8f7ee] text-[#2c9367] border border-[#c3eed9]">
+          Academic Scheduling Hub
+        </span>
+      </div>
+
+      <!-- Role Selection Tabs (Separating Admin/HOD and Faculty) -->
+      <div class="bg-[#eef8f2] p-1 rounded-xl flex mb-5 border border-[#d2edd9]">
+        <button 
+          id="role-admin-btn" 
+          type="button" 
+          onclick="setLoginRole('admin')" 
+          class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-[#38b07e] text-white shadow-sm shadow-[#38b07e]/20 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Admin / HOD</span>
+        </button>
+        <button 
+          id="role-faculty-btn" 
+          type="button" 
+          onclick="setLoginRole('faculty')" 
+          class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <span>Faculty</span>
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4" novalidate>
+        <!-- Email Field -->
+        <div>
+          <label for="login-email" class="block text-xs font-semibold text-slate-700 uppercase mb-1 tracking-wider">Email ID</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5fc99b]">
+              <i class="fa-regular fa-envelope text-xs"></i>
+            </span>
+            <input 
+              type="email" 
+              id="login-email" 
+              placeholder="e.g. name@college.edu" 
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#cfead7] focus:outline-none focus:ring-2 focus:ring-[#80deb4] focus:border-[#38b07e] text-sm text-slate-800 transition-all bg-[#fbfdfc]">
+          </div>
+          <p id="login-email-error" class="text-xs text-rose-500 mt-1 hidden"></p>
+        </div>
+
+        <!-- Faculty ID Field (Only for Faculty Role) -->
+        <div id="faculty-id-container" class="hidden">
+          <label for="login-faculty-id" class="block text-xs font-semibold text-slate-700 uppercase mb-1 tracking-wider">Faculty ID</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5fc99b]">
+              <i class="fa-solid fa-id-card text-xs"></i>
+            </span>
+            <input 
+              type="text" 
+              id="login-faculty-id" 
+              placeholder="e.g. FAC-2024-101" 
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#cfead7] focus:outline-none focus:ring-2 focus:ring-[#80deb4] focus:border-[#38b07e] text-sm text-slate-800 transition-all bg-[#fbfdfc]">
+          </div>
+          <p id="login-faculty-id-error" class="text-xs text-rose-500 mt-1 hidden"></p>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="login-password" class="block text-xs font-semibold text-slate-700 uppercase mb-1 tracking-wider">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5fc99b]">
+              <i class="fa-solid fa-lock text-xs"></i>
+            </span>
+            <input 
+              type="password" 
+              id="login-password" 
+              placeholder="Enter your password" 
+              class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[#cfead7] focus:outline-none focus:ring-2 focus:ring-[#80deb4] focus:border-[#38b07e] text-sm text-slate-800 transition-all bg-[#fbfdfc]">
+            <button 
+              type="button" 
+              onclick="togglePasswordVisibility()" 
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#38b07e] focus:outline-none"
+              aria-label="Toggle password visibility">
+              <i id="pwd-toggle-icon" class="fa-regular fa-eye text-sm"></i>
+            </button>
+          </div>
+          <p id="login-password-error" class="text-xs text-rose-500 mt-1 hidden"></p>
+        </div>
+
+        <!-- Forgot Password Link -->
+        <div class="flex items-center justify-end pt-0.5">
+          <button 
+            type="button" 
+            onclick="showForgotPasswordModal()" 
+            class="text-xs font-medium text-[#2c9367] hover:text-[#21734f] transition-colors">
+            Forgot Password?
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          id="login-submit-btn" 
+          class="w-full py-3 bg-[#38b07e] hover:bg-[#2e9a6c] active:bg-[#25825b] text-white font-semibold rounded-xl shadow-md shadow-[#38b07e]/25 transition-all text-sm flex items-center justify-center gap-2">
+          <span id="login-btn-text">Sign In as Admin / HOD</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL (FRONTEND ONLY MESSAGE) -->
+  <div id="forgot-password-modal" class="fixed inset-0 z-[60] bg-slate-900/35 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-[#d2edd9]">
+      <div class="w-12 h-12 bg-[#eef8f2] text-[#2c9367] rounded-xl flex items-center justify-center text-xl mx-auto mb-3">
+        <i class="fa-solid fa-key"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800 text-center">Reset Account Password</h3>
+      <p class="text-xs text-slate-600 text-center mt-2 leading-relaxed">
+        For academic security, password resets are handled directly by the College IT / Timetable Coordinator.
+      </p>
+      <div class="bg-[#f4fbf7] p-3.5 rounded-xl border border-[#d2edd9] text-xs text-slate-600 space-y-2 my-4">
+        <div class="flex items-start gap-2">
+          <i class="fa-solid fa-envelope text-[#38b07e] mt-0.5"></i>
+          <span>Email: <strong class="text-slate-800">it-support@college.edu</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <i class="fa-solid fa-building-columns text-[#38b07e] mt-0.5"></i>
+          <span>Location: <strong class="text-slate-800">Admin Block, Room 104</strong></span>
+        </div>
+        <div class="flex items-start gap-2">
+          <i class="fa-solid fa-id-badge text-[#38b07e] mt-0.5"></i>
+          <span>Please provide your registered College ID</span>
+        </div>
+      </div>
+      <button 
+        type="button" 
+        onclick="closeForgotPasswordModal()" 
+        class="w-full py-2.5 bg-[#38b07e] hover:bg-[#2e9a6c] text-white text-xs font-semibold rounded-xl shadow-sm transition-all">
+        Understood &bull; Close
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN APP WRAPPER -->
+  <div id="app-wrapper" class="flex-1 flex flex-col md:flex-row hidden min-h-screen">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
+      <div class="p-5 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-900 font-extrabold text-lg">
+            E
+          </div>
+          <div>
+            <h2 class="font-bold text-white leading-tight">EduNova</h2>
+            <span class="text-xs text-emerald-400 font-medium">Academic Portal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        <div class="text-[10px] font-bold text-slate-500 tracking-wider uppercase px-3 mb-2">Main Menu</div>
+        
+        <a href="#dashboard" onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-white bg-slate-800/80">
+          <i class="fa-solid fa-chart-pie w-5 text-emerald-400"></i>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="#timetable" onclick="navigateTo('timetable')" id="nav-timetable" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-calendar-days w-5 text-slate-400"></i>
+          <span>Timetable</span>
+        </a>
+
+        <!-- Admin Only Item -->
+        <a href="#faculty" onclick="navigateTo('faculty')" id="nav-faculty" class="admin-only nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-users w-5 text-slate-400"></i>
+          <span>Faculty Directory</span>
+        </a>
+
+        <!-- Admin Only Item: ROOMS & LABS -->
+        <a href="#rooms" onclick="navigateTo('rooms')" id="nav-rooms" class="admin-only nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-door-open w-5 text-slate-400"></i>
+          <span>Rooms & Labs</span>
+        </a>
+
+        <!-- Faculty Only Items -->
+        <a href="#syllabus" onclick="navigateTo('syllabus')" id="nav-syllabus" class="faculty-only nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white hidden">
+          <i class="fa-solid fa-book-open w-5 text-slate-400"></i>
+          <span>Syllabus & Planner</span>
+        </a>
+
+        <a href="#replacements" onclick="navigateTo('replacements')" id="nav-replacements" class="faculty-only nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white hidden">
+          <i class="fa-solid fa-arrows-rotate w-5 text-slate-400"></i>
+          <span>Replacements</span>
+        </a>
+
+        <div class="text-[10px] font-bold text-slate-500 tracking-wider uppercase px-3 pt-6 mb-2">Preferences</div>
+
+        <a href="#settings" onclick="navigateTo('settings')" id="nav-settings" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-800 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-gear w-5 text-slate-400"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- User Profile Footer -->
+      <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div id="user-avatar" class="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-sm">
+              DD
+            </div>
+            <div>
+              <div id="user-name" class="text-sm font-semibold text-white leading-tight">Dr. Dhanraj R. Dhotre</div>
+              <div id="user-role-badge" class="text-[11px] text-emerald-400 font-medium">HOD &bull; AI&DS</div>
+            </div>
+          </div>
+          <button onclick="handleLogout()" title="Logout" class="text-slate-400 hover:text-red-400 p-2 rounded-lg transition-colors">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT AREA -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-slate-50">
+
+      <!-- TOPBAR -->
+      <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <h1 id="page-title" class="text-xl font-bold text-slate-800">Dashboard</h1>
+          <span id="role-pill" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+            Admin View
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <!-- Role Toggle Quick Switcher (Admin Only) -->
+          <div id="role-quick-switcher" class="admin-only flex items-center bg-slate-100 p-1 rounded-xl text-xs font-medium">
+            <button onclick="switchRole('admin')" id="switch-admin-btn" class="px-3 py-1 rounded-lg bg-white shadow-sm text-slate-800 font-semibold">Admin</button>
+            <button onclick="switchRole('faculty')" id="switch-faculty-btn" class="px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800">Faculty</button>
+          </div>
+
+          <button class="relative p-2 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors">
+            <i class="fa-regular fa-bell text-lg"></i>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE MAIN CONTAINER -->
+      <main class="flex-1 overflow-y-auto p-6">
+
+        <!-- ==================== PAGE: DASHBOARD ==================== -->
+        <section id="page-dashboard" class="page-view space-y-6">
+          <div id="dashboard-admin-view" class="space-y-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-slate-500 uppercase">Total Faculty</p>
+                  <h3 class="text-2xl font-bold text-slate-800 mt-1">28</h3>
+                  <p class="text-xs text-emerald-600 mt-1 font-medium"><i class="fa-solid fa-check mr-1"></i>All Active</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-slate-500 uppercase">Lectures Today</p>
+                  <h3 class="text-2xl font-bold text-slate-800 mt-1">42</h3>
+                  <p class="text-xs text-slate-500 mt-1">Across 4 divisions</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-xl">
+                  <i class="fa-solid fa-chalkboard"></i>
+                </div>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-slate-500 uppercase">Free Classrooms</p>
+                  <h3 class="text-2xl font-bold text-emerald-600 mt-1">3 / 4</h3>
+                  <p class="text-xs text-emerald-600 mt-1 font-medium">Currently Available</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl">
+                  <i class="fa-solid fa-door-open"></i>
+                </div>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-slate-500 uppercase">Practical Labs</p>
+                  <h3 class="text-2xl font-bold text-slate-800 mt-1">1 / 2</h3>
+                  <p class="text-xs text-amber-600 mt-1 font-medium">Lab 201 Occupied</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 text-xl">
+                  <i class="fa-solid fa-flask"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Overview Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center justify-between">
+                  <span>Ongoing & Next Sessions</span>
+                  <button onclick="navigateTo('rooms')" class="text-xs text-emerald-600 font-semibold hover:underline">View Rooms Setup →</button>
+                </h3>
+                <div class="space-y-3">
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-2 h-10 bg-emerald-500 rounded-full"></div>
+                      <div>
+                        <div class="font-semibold text-slate-800 text-sm">DM (Dr. Dhanraj R. Dhotre)</div>
+                        <div class="text-xs text-slate-500">Room 204 • SY AD1</div>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg">10:00 - 11:00 AM</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-2 h-10 bg-blue-500 rounded-full"></div>
+                      <div>
+                        <div class="font-semibold text-slate-800 text-sm">DSA Practical</div>
+                        <div class="text-xs text-slate-500">Lab 201 • SY AD1</div>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-lg">10:00 - 12:00 PM</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-base mb-4">Division Quick Status</h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-xs text-slate-500">Division</div>
+                    <div class="font-bold text-slate-800 text-base">SY AD1</div>
+                    <div class="text-xs text-emerald-600 font-medium mt-1">In Session • DM</div>
+                  </div>
+                  <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-xs text-slate-500">Division</div>
+                    <div class="font-bold text-slate-800 text-base">TY AD1</div>
+                    <div class="text-xs text-emerald-600 font-medium mt-1">In Session • OSA</div>
+                  </div>
+                  <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-xs text-slate-500">Division</div>
+                    <div class="font-bold text-slate-800 text-base">TY AD2</div>
+                    <div class="text-xs text-emerald-600 font-medium mt-1">In Session • PSOOP</div>
+                  </div>
+                  <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-xs text-slate-500">Division</div>
+                    <div class="font-bold text-slate-800 text-base">SY AD3</div>
+                    <div class="text-xs text-slate-400 font-medium mt-1">Free / Self Study</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Faculty View Specific Dashboard -->
+          <div id="dashboard-faculty-view" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div>
+                <h2 class="text-xl font-bold text-slate-800">Welcome Back, Dr. Dhanraj R. Dhotre!</h2>
+                <p class="text-slate-500 text-sm mt-1">You have 3 lectures and 1 lab session scheduled for today.</p>
+              </div>
+              <!-- Circular Workload Ring Widget -->
+              <div class="flex items-center space-x-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="6" class="text-slate-200" fill="transparent" />
+                    <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="6" class="text-emerald-500" fill="transparent" stroke-dasharray="163" stroke-dashoffset="40" />
+                  </svg>
+                  <span class="absolute text-xs font-bold text-slate-800">16 hrs</span>
+                </div>
+                <div>
+                  <div class="text-xs text-slate-500 font-medium">Weekly Workload</div>
+                  <div class="text-sm font-bold text-slate-800">16 / 20 Hours</div>
+                  <div class="text-[11px] text-emerald-600 font-medium">80% Target Completed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: TIMETABLE ==================== -->
+        <section id="page-timetable" class="page-view space-y-6 hidden">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">Master Academic Schedule</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Filter schedule by class division or faculty member</p>
+              </div>
+              <div class="flex items-center space-x-3">
+                <select class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700">
+                  <option>All Divisions (SY-AD1, TY-AD1, etc.)</option>
+                  <option>SY-AD1</option>
+                  <option>SY-AD2</option>
+                  <option>SY-AD3</option>
+                  <option>TY-AD1</option>
+                  <option>TY-AD2</option>
+                  <option>BE-AD1</option>
+                  <option>BE-AD2</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Timetable Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-y border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3 px-4">Time Slot</th>
+                    <th class="py-3 px-4">Monday</th>
+                    <th class="py-3 px-4">Tuesday</th>
+                    <th class="py-3 px-4">Wednesday</th>
+                    <th class="py-3 px-4">Thursday</th>
+                    <th class="py-3 px-4">Friday</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                  <tr>
+                    <td class="py-3.5 px-4 font-semibold text-slate-700 bg-slate-50/50">09:00 - 10:00 AM</td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">DM</span> <span class="text-xs text-slate-500 block">SY AD1 • Rm 204</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">DSA</span> <span class="text-xs text-slate-500 block">SY AD1 • Rm 102</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">PSOOP</span> <span class="text-xs text-slate-500 block">TY AD2 • Rm 101</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">OSA</span> <span class="text-xs text-slate-500 block">TY AD1 • Rm 103</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">DM</span> <span class="text-xs text-slate-500 block">SY AD1 • Rm 204</span></td>
+                  </tr>
+                  <tr>
+                    <td class="py-3.5 px-4 font-semibold text-slate-700 bg-slate-50/50">10:00 - 11:00 AM</td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">PSOOP</span> <span class="text-xs text-slate-500 block">TY AD2 • Rm 101</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">DM</span> <span class="text-xs text-slate-500 block">SY AD1 • Rm 204</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">OSA</span> <span class="text-xs text-slate-500 block">TY AD1 • Rm 103</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">DSA</span> <span class="text-xs text-slate-500 block">SY AD1 • Rm 102</span></td>
+                    <td class="py-3.5 px-4"><span class="font-bold text-slate-800">PSOOP</span> <span class="text-xs text-slate-500 block">TY AD2 • Rm 101</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: FACULTY DIRECTORY ==================== -->
+        <section id="page-faculty" class="page-view space-y-6 hidden">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Faculty Members Directory</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="p-4 rounded-xl border border-slate-200 flex items-center space-x-3">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center font-bold text-emerald-800 text-base">
+                  PS
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800">Dr. Dhanraj R. Dhotre</div>
+                  <div class="text-xs text-slate-500">HOD • Discrete Mathematics (DM)</div>
+                  <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">16 hrs/wk</span>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl border border-slate-200 flex items-center space-x-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-800 text-base">
+                  PP
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800">Prof. Patil</div>
+                  <div class="text-xs text-slate-500">Assistant Professor • PSOOP</div>
+                  <span class="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded">18 hrs/wk</span>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl border border-slate-200 flex items-center space-x-3">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center font-bold text-purple-800 text-base">
+                  DK
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800">Dr. Kulkarni</div>
+                  <div class="text-xs text-slate-500">Associate Professor • OSA / DSA</div>
+                  <span class="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded">14 hrs/wk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: ROOMS & LABORATORIES ==================== -->
+        <section id="page-rooms" class="page-view space-y-6 hidden">
+          <!-- Room Page Header -->
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Rooms & Laboratories</h2>
+          </div>
+
+          <!-- DAY SELECTION DROPDOWN FILTER CARD -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SELECT DAY</label>
+            <select id="select-day" onchange="updateRoomsAndLabsView()" class="w-full md:w-80 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+              <option value="Monday" selected>Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+            </select>
+          </div>
+
+          <!-- SECTION 1: CLASSROOMS (1-HOUR SLOTS) -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800">CLASSROOMS <span class="text-xs font-normal text-slate-500">(1-Hour Slots)</span></h3>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">SELECT LECTURE TIME SLOT</label>
+                  <select id="select-lecture-slot" onchange="renderClassroomsTable()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="ALL">All Slots (Full Day Summary)</option>
+                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM" selected>10:00 AM - 11:00 AM</option>
+                    <option value="11:15 AM - 12:15 PM">11:15 AM - 12:15 PM</option>
+                    <option value="12:15 PM - 01:15 PM">12:15 PM - 01:15 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                  </select>
+                </div>
+                <div id="classroom-status-badge" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 self-end">
+                  [ 0 AVAILABLE / 0 OCCUPIED ]
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-5">ROOM NUMBER</th>
+                    <th class="py-3.5 px-5">CLASS</th>
+                    <th class="py-3.5 px-5">ASSIGNED LECTURE & FACULTY</th>
+                    <th class="py-3.5 px-5 text-right">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody id="classrooms-tbody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Dynamic JS rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SECTION 2: LABORATORIES (2-HOUR PRACTICAL SLOTS) -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-flask"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800">LABORATORIES <span class="text-xs font-normal text-slate-500">(2-Hour Practical Slots)</span></h3>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">SELECT PRACTICAL TIME SLOT</label>
+                  <select id="select-practical-slot" onchange="renderLabsTable()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="ALL">All Slots (Full Day Summary)</option>
+                    <option value="09:00 AM - 11:00 AM">09:00 AM - 11:00 AM</option>
+                    <option value="10:00 AM - 12:00 PM" selected>10:00 AM - 12:00 PM</option>
+                    <option value="11:15 AM - 01:15 PM">11:15 AM - 01:15 PM</option>
+                    <option value="01:45 PM - 03:45 PM">01:45 PM - 03:45 PM</option>
+                  </select>
+                </div>
+                <div id="labs-status-badge" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 self-end">
+                  [ 0 AVAILABLE / 0 OCCUPIED ]
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-5">LAB NO. & NAME</th>
+                    <th class="py-3.5 px-5">CLASS</th>
+                    <th class="py-3.5 px-5">ASSIGNED PRACTICAL</th>
+                    <th class="py-3.5 px-5 text-right">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody id="labs-tbody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Dynamic JS rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: SYLLABUS & PLANNER ==================== -->
+        <section id="page-syllabus" class="page-view space-y-6 hidden">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-800 mb-2">Syllabus Completion Planner</h2>
+            <p class="text-xs text-slate-500 mb-6">Track unit completion and syllabus coverage for DM (Discrete Mathematics)</p>
+
+            <div class="space-y-4">
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold text-slate-800 text-sm">Unit 1: Set Theory & Mathematical Logic</span>
+                  <span class="text-xs font-bold text-emerald-600">100% Completed</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div class="bg-emerald-500 h-full w-full"></div>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold text-slate-800 text-sm">Unit 2: Graph Theory & Trees</span>
+                  <span class="text-xs font-bold text-emerald-600">65% Completed</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                  <div class="bg-emerald-500 h-full w-[65%]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: REPLACEMENTS ==================== -->
+        <section id="page-replacements" class="page-view space-y-6 hidden">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Lecture Replacement Requests</h2>
+            <p class="text-xs text-slate-500 mb-4">Request peer faculty members to swap or cover lecture slots.</p>
+            <div class="p-4 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center justify-between">
+              <span><strong>Pending Request:</strong> Prof. Patil requested cover for Thursday 02:00 PM slot.</span>
+              <button class="px-3 py-1 bg-amber-600 text-white rounded-lg font-bold">Accept</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== PAGE: SETTINGS ==================== -->
+        <section id="page-settings" class="page-view space-y-6 hidden">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Portal Settings</h2>
+            <p class="text-xs text-slate-500">Configure notifications, academic session details, and account preferences.</p>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- GLOBAL STATE ---
+    let currentUserRole = 'admin'; // 'admin' or 'faculty'
+
+    // --- FULL ROOM & LAB TIMETABLE DATA MATRIX ---
+    // Mapping: Day -> Slot -> Array of Room/Lab occupancy objects
+    const roomScheduleData = {
+      Monday: {
+        classrooms: {
+          "09:00 AM - 10:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 11:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "11:15 AM - 12:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "12:15 PM - 01:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "02:00 PM - 03:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "03:00 PM - 04:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        },
+        labs: {
+          "09:00 AM - 11:00 AM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "10:00 AM - 12:00 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 01:15 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "01:45 PM - 03:45 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD3", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD2", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        }
+      },
+      Tuesday: {
+        classrooms: {
+          "09:00 AM - 10:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "10:00 AM - 11:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "11:15 AM - 12:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "12:15 PM - 01:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "02:00 PM - 03:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "03:00 PM - 04:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        },
+        labs: {
+          "09:00 AM - 11:00 AM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 12:00 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD3", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 01:15 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD2", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "01:45 PM - 03:45 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ]
+        }
+      },
+      Wednesday: {
+        classrooms: {
+          "09:00 AM - 10:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 11:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 12:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "12:15 PM - 01:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "02:00 PM - 03:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "03:00 PM - 04:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        },
+        labs: {
+          "09:00 AM - 11:00 AM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "10:00 AM - 12:00 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "11:15 AM - 01:15 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD3", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD2", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "01:45 PM - 03:45 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        }
+      },
+      Thursday: {
+        classrooms: {
+          "09:00 AM - 10:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 11:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 12:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "12:15 PM - 01:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "02:00 PM - 03:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "03:00 PM - 04:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        },
+        labs: {
+          "09:00 AM - 11:00 AM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 12:00 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 01:15 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD3", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD2", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "01:45 PM - 03:45 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        }
+      },
+      Friday: {
+        classrooms: {
+          "09:00 AM - 10:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "10:00 AM - 11:00 AM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "DSA (Dr. Kulkarni)", status: "OCCUPIED" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "11:15 AM - 12:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "DM (Dr. Dhanraj R. Dhotre)", status: "OCCUPIED" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "12:15 PM - 01:15 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "02:00 PM - 03:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "PSOOP (Prof. Patil)", status: "OCCUPIED" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "OSA (Dr. Kulkarni)", status: "OCCUPIED" }
+          ],
+          "03:00 PM - 04:00 PM": [
+            { room: "Room 204", class: "SY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 101", class: "TY AD2", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 102", class: "SY AD3", lecture: "Unallocated / Free", status: "AVAILABLE" },
+            { room: "Room 103", class: "TY AD1", lecture: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        },
+        labs: {
+          "09:00 AM - 11:00 AM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "10:00 AM - 12:00 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ],
+          "11:15 AM - 01:15 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD3", practical: "Unallocated / Free", status: "AVAILABLE" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD2", practical: "Python AI Lab Practical", status: "OCCUPIED" }
+          ],
+          "01:45 PM - 03:45 PM": [
+            { lab: "Lab 201 - Computing Lab", class: "SY AD1", practical: "DSA Practical", status: "OCCUPIED" },
+            { lab: "Lab 202 - Data Science Lab", class: "TY AD1", practical: "Unallocated / Free", status: "AVAILABLE" }
+          ]
+        }
+      }
+    };
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      // Setup initial view
+      updateRoomsAndLabsView();
+    };
+
+    // --- AUTH / LOGIN HANDLING ---
+    let activeLoginRole = 'admin';
+
+    function setLoginRole(role) {
+      activeLoginRole = role;
+      const adminBtn = document.getElementById('role-admin-btn');
+      const facultyBtn = document.getElementById('role-faculty-btn');
+      const facultyIdContainer = document.getElementById('faculty-id-container');
+      const submitBtnText = document.getElementById('login-btn-text');
+
+      clearLoginErrors();
+
+      if (role === 'admin') {
+        adminBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-[#38b07e] text-white shadow-sm shadow-[#38b07e]/20 flex items-center justify-center gap-2";
+        facultyBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
+        if (facultyIdContainer) facultyIdContainer.classList.add('hidden');
+        if (submitBtnText) submitBtnText.textContent = "Sign In as Admin / HOD";
+      } else {
+        facultyBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-[#38b07e] text-white shadow-sm shadow-[#38b07e]/20 flex items-center justify-center gap-2";
+        adminBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
+        if (facultyIdContainer) facultyIdContainer.classList.remove('hidden');
+        if (submitBtnText) submitBtnText.textContent = "Sign In as Faculty";
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('login-password');
+      const icon = document.getElementById('pwd-toggle-icon');
+      if (!pwdInput || !icon) return;
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        pwdInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    function showForgotPasswordModal() {
+      const modal = document.getElementById('forgot-password-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeForgotPasswordModal() {
+      const modal = document.getElementById('forgot-password-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function clearLoginErrors() {
+      const emailError = document.getElementById('login-email-error');
+      const pwdError = document.getElementById('login-password-error');
+      const facError = document.getElementById('login-faculty-id-error');
+      if (emailError) emailError.classList.add('hidden');
+      if (pwdError) pwdError.classList.add('hidden');
+      if (facError) facError.classList.add('hidden');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      clearLoginErrors();
+
+      const emailInput = document.getElementById('login-email');
+      const pwdInput = document.getElementById('login-password');
+      const facultyIdInput = document.getElementById('login-faculty-id');
+      const submitBtnText = document.getElementById('login-btn-text');
+      const emailVal = emailInput ? emailInput.value.trim() : '';
+      const pwdVal = pwdInput ? pwdInput.value : '';
+      const facIdVal = facultyIdInput ? facultyIdInput.value.trim().toUpperCase() : '';
+      let hasError = false;
+
+      // Validate Email
+      if (!emailVal) {
+        showError('login-email-error', 'Please enter your institutional email ID.');
+        hasError = true;
+      }
+
+      // Validate Faculty ID if in Faculty mode
+      if (activeLoginRole === 'faculty' && !facIdVal) {
+        showError('login-faculty-id-error', 'Please enter your Faculty ID / Employee Code.');
+        hasError = true;
+      }
+
+      // Validate Password
+      if (!pwdVal) {
+        showError('login-password-error', 'Please enter your password.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const origBtnText = submitBtnText ? submitBtnText.textContent : '';
+      if (submitBtnText) submitBtnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Authenticating...';
+
+      try {
+        const payload = {
+          email: emailVal,
+          faculty_id: facIdVal,
+          password: pwdVal,
+          role: activeLoginRole
+        };
+
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const errMsg = data.detail || 'Authentication failed. Please verify your credentials.';
+          if (activeLoginRole === 'faculty' && errMsg.toLowerCase().includes('faculty id')) {
+            showError('login-faculty-id-error', errMsg);
+          } else {
+            showError('login-password-error', errMsg);
+          }
+          if (submitBtnText) submitBtnText.textContent = origBtnText;
+          return;
+        }
+
+        // Store real JWT token and authenticated user details
+        localStorage.setItem('edunova_token', data.access_token);
+        localStorage.setItem('edunova_auth_user', JSON.stringify(data.user));
+        localStorage.setItem('edunova_active_faculty_id', data.user.faculty_id || data.user.id);
+
+        if (data.user.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'faculty.html';
+        }
+      } catch (err) {
+        console.error('Login network error:', err);
+        showError('login-password-error', 'Unable to connect to Flask backend server. Please verify the application is running.');
+        if (submitBtnText) submitBtnText.textContent = origBtnText;
+      }
+    }
+
+    function showError(elementId, message) {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.textContent = message;
+        el.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('app-wrapper').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      const pwd = document.getElementById('login-password');
+      if (pwd) pwd.value = '';
+    }
+
+    // --- ROLE SWITCHING & ACCESS CONTROL ---
+    function switchRole(role) {
+      // Security Enforcement: Faculty cannot see or switch to the Admin dashboard
+      if (activeLoginRole === 'faculty' && role === 'admin') {
+        console.warn('Access denied: Faculty accounts cannot access Admin dashboard.');
+        return;
+      }
+
+      currentUserRole = role;
+      const adminElements = document.querySelectorAll('.admin-only');
+      const facultyElements = document.querySelectorAll('.faculty-only');
+      const rolePill = document.getElementById('role-pill');
+      const switchAdminBtn = document.getElementById('switch-admin-btn');
+      const switchFacultyBtn = document.getElementById('switch-faculty-btn');
+      const userRoleBadge = document.getElementById('user-role-badge');
+      const roleSwitcher = document.getElementById('role-quick-switcher');
+      
+      const dashAdminView = document.getElementById('dashboard-admin-view');
+      const dashFacultyView = document.getElementById('dashboard-faculty-view');
+
+      if (role === 'admin') {
+        adminElements.forEach(el => el.classList.remove('hidden'));
+        facultyElements.forEach(el => el.classList.add('hidden'));
+        if (roleSwitcher) roleSwitcher.classList.remove('hidden');
+        if (rolePill) {
+          rolePill.textContent = 'Admin / HOD View';
+          rolePill.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#e8f7ee] text-[#2c9367] border border-[#c3eed9]';
+        }
+        
+        if (switchAdminBtn) switchAdminBtn.className = 'px-3 py-1 rounded-lg bg-white shadow-sm text-slate-800 font-semibold';
+        if (switchFacultyBtn) switchFacultyBtn.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800';
+        
+        if (userRoleBadge) userRoleBadge.textContent = 'HOD - Comp Sci';
+        
+        if (dashAdminView) dashAdminView.classList.remove('hidden');
+        if (dashFacultyView) dashFacultyView.classList.add('hidden');
+      } else {
+        // Faculty Mode: Strictly hide all admin elements, switcher, and admin dashboard
+        adminElements.forEach(el => el.classList.add('hidden'));
+        facultyElements.forEach(el => el.classList.remove('hidden'));
+        if (roleSwitcher) roleSwitcher.classList.add('hidden');
+        if (rolePill) {
+          rolePill.textContent = 'Faculty Member View';
+          rolePill.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#e8f7ee] text-[#2c9367] border border-[#c3eed9]';
+        }
+
+        if (switchFacultyBtn) switchFacultyBtn.className = 'px-3 py-1 rounded-lg bg-white shadow-sm text-slate-800 font-semibold';
+        if (switchAdminBtn) switchAdminBtn.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800';
+
+        if (userRoleBadge) userRoleBadge.textContent = 'Senior Professor';
+
+        if (dashAdminView) dashAdminView.classList.add('hidden');
+        if (dashFacultyView) dashFacultyView.classList.remove('hidden');
+
+        // Prevent faculty from seeing any admin pages
+        const currentActive = document.querySelector('.page-view:not(.hidden)');
+        if (currentActive && (currentActive.id === 'page-rooms' || currentActive.id === 'page-faculty')) {
+          navigateTo('dashboard');
+        }
+      }
+    }
+
+    // --- NAVIGATION LOGIC ---
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+      const targetPage = document.getElementById(`page-${pageId}`);
+      if (targetPage) targetPage.classList.remove('hidden');
+
+      // Update sidebar nav styles
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('bg-slate-800/80', 'text-white');
+        item.classList.add('text-slate-400');
+      });
+
+      const activeNav = document.getElementById(`nav-${pageId}`);
+      if (activeNav) {
+        activeNav.classList.add('bg-slate-800/80', 'text-white');
+        activeNav.classList.remove('text-slate-400');
+      }
+
+      // Update Topbar Title
+      const titles = {
+        'dashboard': 'Dashboard',
+        'timetable': 'Master Academic Timetable',
+        'faculty': 'Faculty Directory',
+        'rooms': 'Rooms & Laboratories Status',
+        'syllabus': 'Syllabus & Course Planner',
+        'replacements': 'Lecture Replacement Requests',
+        'settings': 'Settings'
+      };
+      document.getElementById('page-title').textContent = titles[pageId] || 'EduNova Portal';
+
+      // Re-trigger rooms table renders if navigated to rooms
+      if (pageId === 'rooms') {
+        updateRoomsAndLabsView();
+      }
+    }
+
+    // --- ROOMS & LABS REAL-TIME JS RENDERERS ---
+
+    function updateRoomsAndLabsView() {
+      renderClassroomsTable();
+      renderLabsTable();
+    }
+
+    // Render Section 1: Classrooms (1-Hour Slots)
+    function renderClassroomsTable() {
+      const selectedDay = document.getElementById('select-day').value;
+      const selectedSlot = document.getElementById('select-lecture-slot').value;
+      const tbody = document.getElementById('classrooms-tbody');
+      const statusBadge = document.getElementById('classroom-status-badge');
+
+      if (!tbody || !roomScheduleData[selectedDay]) return;
+
+      tbody.innerHTML = '';
+      let availableCount = 0;
+      let occupiedCount = 0;
+
+      const dayClassroomData = roomScheduleData[selectedDay].classrooms;
+
+      if (selectedSlot === 'ALL') {
+        // Summary Mode Across Full Day
+        const roomSummaryMap = {
+          "Room 204": { class: "SY AD1", busySlots: [], freeSlots: [] },
+          "Room 101": { class: "TY AD2", busySlots: [], freeSlots: [] },
+          "Room 102": { class: "SY AD3", busySlots: [], freeSlots: [] },
+          "Room 103": { class: "TY AD1", busySlots: [], freeSlots: [] }
+        };
+
+        Object.keys(dayClassroomData).forEach(slotKey => {
+          dayClassroomData[slotKey].forEach(item => {
+            if (roomSummaryMap[item.room]) {
+              if (item.status === 'OCCUPIED') {
+                roomSummaryMap[item.room].busySlots.push(`${slotKey.split(' - ')[0]} (${item.lecture.split(' ')[0]})`);
+              } else {
+                roomSummaryMap[item.room].freeSlots.push(slotKey);
+              }
+            }
+          });
+        });
+
+        Object.keys(roomSummaryMap).forEach(roomKey => {
+          const info = roomSummaryMap[roomKey];
+          const isOccupiedMost = info.busySlots.length > 2;
+          if (isOccupiedMost) occupiedCount++; else availableCount++;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/80 transition-colors";
+
+          const assignedText = info.busySlots.length > 0 
+            ? `Scheduled: ${info.busySlots.join(', ')}` 
+            : "Fully Unallocated / Available All Day";
+
+          tr.innerHTML = `
+            <td class="py-3.5 px-5 font-bold text-slate-800">${roomKey}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-600">${info.class}</td>
+            <td class="py-3.5 px-5 text-slate-700 font-medium">${assignedText}</td>
+            <td class="py-3.5 px-5 text-right">
+              ${isOccupiedMost 
+                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>BUSY DAY</span>' 
+                : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>AVAILABLE</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } else {
+        // Specific 1-Hour Time Slot Mode
+        const slotData = dayClassroomData[selectedSlot] || [];
+
+        slotData.forEach(item => {
+          if (item.status === 'OCCUPIED') occupiedCount++;
+          else availableCount++;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/80 transition-colors";
+
+          const isOccupied = item.status === 'OCCUPIED';
+
+          tr.innerHTML = `
+            <td class="py-3.5 px-5 font-bold text-slate-800">${item.room}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-600">${item.class}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-700">${item.lecture}</td>
+            <td class="py-3.5 px-5 text-right">
+              ${isOccupied 
+                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>OCCUPIED</span>' 
+                : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>AVAILABLE</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Update badge count
+      statusBadge.textContent = `[ ${availableCount} AVAILABLE / ${occupiedCount} OCCUPIED ]`;
+    }
+
+    // Render Section 2: Laboratories (2-Hour Practical Slots)
+    function renderLabsTable() {
+      const selectedDay = document.getElementById('select-day').value;
+      const selectedSlot = document.getElementById('select-practical-slot').value;
+      const tbody = document.getElementById('labs-tbody');
+      const statusBadge = document.getElementById('labs-status-badge');
+
+      if (!tbody || !roomScheduleData[selectedDay]) return;
+
+      tbody.innerHTML = '';
+      let availableCount = 0;
+      let occupiedCount = 0;
+
+      const dayLabData = roomScheduleData[selectedDay].labs;
+
+      if (selectedSlot === 'ALL') {
+        // Summary Mode Across Full Day
+        const labSummaryMap = {
+          "Lab 201 - Computing Lab": { class: "SY AD1", busySlots: [] },
+          "Lab 202 - Data Science Lab": { class: "TY AD1", busySlots: [] }
+        };
+
+        Object.keys(dayLabData).forEach(slotKey => {
+          dayLabData[slotKey].forEach(item => {
+            if (labSummaryMap[item.lab] && item.status === 'OCCUPIED') {
+              labSummaryMap[item.lab].busySlots.push(`${slotKey.split(' - ')[0]} (${item.practical})`);
+            }
+          });
+        });
+
+        Object.keys(labSummaryMap).forEach(labKey => {
+          const info = labSummaryMap[labKey];
+          const isOccupiedMost = info.busySlots.length > 1;
+          if (isOccupiedMost) occupiedCount++; else availableCount++;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/80 transition-colors";
+
+          const assignedText = info.busySlots.length > 0 
+            ? `Practical Sessions: ${info.busySlots.join(', ')}` 
+            : "Fully Unallocated / Available All Day";
+
+          tr.innerHTML = `
+            <td class="py-3.5 px-5 font-bold text-slate-800">${labKey}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-600">${info.class}</td>
+            <td class="py-3.5 px-5 text-slate-700 font-medium">${assignedText}</td>
+            <td class="py-3.5 px-5 text-right">
+              ${isOccupiedMost 
+                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>BUSY DAY</span>' 
+                : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>AVAILABLE</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } else {
+        // Specific 2-Hour Practical Time Slot Mode
+        const slotData = dayLabData[selectedSlot] || [];
+
+        slotData.forEach(item => {
+          if (item.status === 'OCCUPIED') occupiedCount++;
+          else availableCount++;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/80 transition-colors";
+
+          const isOccupied = item.status === 'OCCUPIED';
+
+          tr.innerHTML = `
+            <td class="py-3.5 px-5 font-bold text-slate-800">${item.lab}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-600">${item.class}</td>
+            <td class="py-3.5 px-5 font-medium text-slate-700">${item.practical}</td>
+            <td class="py-3.5 px-5 text-right">
+              ${isOccupied 
+                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>OCCUPIED</span>' 
+                : '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>AVAILABLE</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Update badge count
+      statusBadge.textContent = `[ ${availableCount} AVAILABLE / ${occupiedCount} OCCUPIED ]`;
+    }
+  </script>
+</body>
+</html>
