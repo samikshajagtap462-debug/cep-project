@@ -76,6 +76,31 @@ def test_persistent_database_safe_initialization_on_empty_disk(monkeypatch):
         assert os.path.getsize(resolved_path) == os.path.getsize(BUNDLED_DB_PATH)
 
 
+def test_persistent_database_initialization_from_secret_file(monkeypatch):
+    """
+    Simulates a newly attached Render persistent disk at /var/data with a Secret File.
+    On first boot, the target file does not exist, but SECRET_DB_PATH points to the uploaded database.
+    The system must safely copy the secret database to the target persistent path.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        mock_target = os.path.join(tmpdir, "persistent_disk", "edunova.db")
+        mock_secret = os.path.join(tmpdir, "secrets", "edunova.db")
+        os.makedirs(os.path.dirname(mock_secret), exist_ok=True)
+        secret_content = b"SECRET_UPLOADED_DB_SENTINEL_2026"
+        with open(mock_secret, "wb") as f:
+            f.write(secret_content)
+
+        monkeypatch.setenv("DATABASE_PATH", mock_target)
+        monkeypatch.setenv("SECRET_DB_PATH", mock_secret)
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+
+        url, resolved_path = resolve_database_config()
+        assert resolved_path == os.path.abspath(mock_target)
+        assert os.path.exists(resolved_path)
+        with open(resolved_path, "rb") as f:
+            assert f.read() == secret_content
+
+
 def test_persistent_database_never_overwrites_existing_disk(monkeypatch):
     """
     Simulates subsequent deploys or restarts on Render where persistent disk already has data.
