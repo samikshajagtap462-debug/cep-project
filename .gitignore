@@ -41,3 +41,5 @@ scratch/
 *.sqlite3
 backend/*.db
 smart-timetable-manager-main/backend/*.db
+*b64*
+*.b64

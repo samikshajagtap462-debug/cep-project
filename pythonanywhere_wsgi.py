@@ -1,37 +1,35 @@
 # ==============================================================================
 # PythonAnywhere WSGI Configuration for EduNova Smart Timetable Manager
+# Active Account: samjjj | Domain: samjjj.pythonanywhere.com
 # ==============================================================================
 # Instructions:
-# 1. In your PythonAnywhere Dashboard, go to the "Web" tab.
-# 2. Click the link under "Code:" -> "WSGI configuration file:"
-#    (e.g., /var/www/yourusername_pythonanywhere_com_wsgi.py)
-# 3. Replace the entire contents of that file with this configuration.
-# 4. Replace 'YOUR_USERNAME' below with your actual PythonAnywhere username.
+# 1. In PythonAnywhere Web Tab -> click link for "WSGI configuration file:"
+#    Path: /var/www/samjjj_pythonanywhere_com_wsgi.py
+# 2. Paste this entire file content into that configuration file and click Save.
 # ==============================================================================
 
 import os
 import sys
 
-# Replace this with your actual PythonAnywhere username (in lowercase)
-USERNAME = "YOUR_USERNAME"
-
-# Define project directories in your PythonAnywhere home directory
+# 1. Project Directory Paths
+USERNAME = "samjjj"
 PROJECT_ROOT = f"/home/{USERNAME}/cep-project"
 APP_SUBDIR = os.path.join(PROJECT_ROOT, "smart-timetable-manager-main")
 
-# Add directories to Python's module search path
+# 2. Add directories to Python sys.path
 for directory in [PROJECT_ROOT, APP_SUBDIR]:
     if directory not in sys.path:
         sys.path.insert(0, directory)
 
-# Production Environment Variables
+# 3. Production Environment Configuration
 os.environ["FLASK_DEBUG"] = "false"
-os.environ["EDUNOVA_SECRET_KEY"] = "edunova-secure-jwt-production-secret-2026"
 
-# Configure the SQLite database to live in your persistent home directory:
-# When you upload your edunova.db into smart-timetable-manager-main/backend/,
-# this path ensures all reads and writes are 100% persistent!
+# Absolute persistent database path in the application's backend directory:
 os.environ["DATABASE_PATH"] = os.path.join(APP_SUBDIR, "backend", "edunova.db")
 
-# Import the Flask application callable as 'application' (expected by PythonAnywhere)
-from app import app as application  # noqa: E402
+# Production JWT secret key (reads existing env or falls back safely)
+if "EDUNOVA_SECRET_KEY" not in os.environ:
+    os.environ["EDUNOVA_SECRET_KEY"] = "edunova-jwt-prod-samjjj-2026-sec"
+
+# 4. Import the real Flask application instance as 'application' (WSGI standard)
+from backend.app.main import app as application  # noqa: E402

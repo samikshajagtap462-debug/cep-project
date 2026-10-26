@@ -40,3 +40,5 @@ scratch/
 *.sqlite
 *.sqlite3
 backend/*.db
+*b64*
+*.b64
