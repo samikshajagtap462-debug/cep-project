@@ -1,6 +1,8 @@
-# Smart Timetable Manager (EduNova) - Flask + SQL Migration
+# cep-project: EduNova Smart Timetable Manager
 
-Smart Timetable & Departmental Management System for academic institutions, migrated from FastAPI to **Python + Flask + SQL (SQLAlchemy ORM & SQLite)**.
+EduNova Smart Timetable Manager is a web-based academic scheduling system with admin and faculty dashboards, individual faculty timetables, master timetable management, and automatic clash detection for faculty, classrooms, and laboratories. It simplifies timetable creation, improves scheduling accuracy, and supports efficient academic management.
+
+Smart Timetable & Departmental Management System for academic institutions, built with **Python + Flask + SQL (SQLAlchemy ORM & SQLite)**.
 
 ---
 
@@ -81,7 +83,7 @@ Once started, open your web browser:
 
 ## 5. Running Automated Tests
 
-Run the full pytest test suite (25 automated tests verifying startup, authentication, database persistence, role-based privacy, timetable clash detection, room occupancy, substitution lifecycle, and all 7 AI&DS classes):
+Run the full pytest test suite (103 automated tests verifying startup, authentication, database persistence, role-based privacy, timetable clash detection, room occupancy, substitution lifecycle, and all AI&DS classes):
 
 ```powershell
 python -m pytest tests -v
@@ -144,19 +146,15 @@ EduNova is production-ready for deployment on [Render](https://render.com).
    - `FLASK_DEBUG`: `false`
    - `PYTHON_VERSION`: `3.11.9`
 3. **Safe One-Time Database Initialization**:
-   - On the very first deployment with an empty persistent disk, EduNova auto-detects that `/var/data/edunova.db` does not exist and safely copies the bundled SQLite database (`backend/edunova.db`) with all existing faculty, AI&DS classes, rooms, and timetables onto the disk.
+   - On the very first deployment with an empty persistent disk, EduNova auto-detects that `/var/data/edunova.db` does not exist and safely copies the uploaded secret file (`/etc/secrets/edunova.db`) onto the disk.
    - On all subsequent deployments, container restarts, or Git code updates, the application verifies the database already exists on `/var/data` and **NEVER overwrites it**. All new faculty records, timetable changes, and substitution records are preserved permanently.
 4. **Deploying with Blueprint (`render.yaml`)**:
    - A pre-configured `render.yaml` file is included in the project root. If you deploy using Render Blueprints ("New Blueprint Instance"), Render will automatically provision the Python Web Service, attach the `/var/data` persistent disk, set the start command, and configure environment variables.
 
 ### Deploying via Private GitHub Repository:
 1. Keep your GitHub repository **Private** to ensure your project data and credentials remain secure.
-2. Initialize and push your repository:
+2. Push your repository:
    ```bash
-   git init
-   git add .
-   git commit -m "EduNova production deployment setup"
-   git remote add origin https://github.com/<your-username>/<repo-name>.git
    git push -u origin main
    ```
-3. In Render, select **New > Web Service**, connect your private GitHub repository, and deploy!
+3. In Render, select **New > Blueprint**, connect your private GitHub repository, and deploy!
